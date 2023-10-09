@@ -7,6 +7,8 @@ public class Menu {
     public String title;
     public String[] options;
     public Runnable[] actions;
+    public Menu[] children;
+    public Menu parent;
 
     public Menu(String title, String[] options, Runnable[] actions) {
         this(title, options, actions, new Menu[0], null);
@@ -23,16 +25,27 @@ public class Menu {
     public Menu(String title, String[] options, Runnable[] actions, Menu[] children, Menu parent) {
         ArrayList<String> optionsList = new ArrayList<>(Arrays.asList(options));
         ArrayList<Runnable> actionsList = new ArrayList<>(Arrays.asList(actions));
+
         int i = 0;
         for (Menu child : children) {
+            child.parent = this;
+
+            ArrayList<String> childOptions = new ArrayList<>(Arrays.asList(child.options));
+            childOptions.add("Back");
+            child.options = childOptions.toArray(new String[0]);
+
+            ArrayList<Runnable> childActions = new ArrayList<>(Arrays.asList(child.actions));
+            childActions.add(() -> print().awaitInput());
+            child.actions = childActions.toArray(new Runnable[0]);
+
             optionsList.add(i, child.title);
             actionsList.add(i, () -> child.print().awaitInput());
             i++;
         }
 
         if (parent != null) {
-            optionsList.add(0, "Back");
-            actionsList.add(0, () -> parent.print().awaitInput());
+            optionsList.add("Back");
+            actionsList.add(() -> parent.print().awaitInput());
         }
 
         options = optionsList.toArray(new String[0]);
@@ -44,6 +57,8 @@ public class Menu {
         this.title = title;
         this.options = options;
         this.actions = actions;
+        this.children = children;
+        this.parent = parent;
     }
 
     public Menu print() {
